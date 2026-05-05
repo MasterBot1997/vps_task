@@ -21,7 +21,7 @@
 ```text
 vps1-webstack-django/
 ├── inventory.ini
-├── playbook.yml
+├── vps1.6-webstack.yml
 ├── group_vars/
 │   └── all.yml
 ├── templates/
@@ -39,25 +39,47 @@ vps1-webstack-django/
 
 ## Запуск
 
-Отредактируйте `inventory.ini` и замените `YOUR_SERVER_IP` на IP учебного VPS.
+В `inventory.ini` уже добавлен skip проверки known_hosts:
+
+```ini
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+```
+
+По умолчанию playbook разворачивает рабочий сайт, проверяет его через nginx, а затем сам ломает стенд для кандидата. Тип поломки задаётся в `group_vars/all.yml`:
+
+```yaml
+break_case_enabled: true
+break_case_type: nginx_socket
+```
+
+Доступные значения `break_case_type`: `nginx_socket`, `systemd_venv`, `both`.
 
 ```bash
-ansible-playbook -i inventory.ini playbook.yml
+ansible-playbook -i inventory.ini vps1.6-webstack.yml
 ```
 
 Если пользователь в inventory не `root`, он должен иметь sudo-права, потому что playbook использует `become: true`.
 
-## Проверка после установки
+## Проверка после установки до учебной поломки
+
+Playbook сам выполняет health-check до внесения поломки:
 
 ```bash
 curl -fsS http://127.0.0.1/
-curl -fsS http://127.0.0.1/ | grep 'DJANGO CENTRAL 1999'
+```
+
+Если `break_case_enabled: true`, после завершения playbook внешний HTTP-запрос ожидаемо может вернуть `502 Bad Gateway`.
+
+## Проверка сломанного стенда
+
+```bash
 systemctl status retro_site --no-pager
 systemctl status nginx --no-pager
 ss -xlpn | grep /run/retro_site/gunicorn.sock
 nginx -t
 ls -la /var/www/retro_site/.venv/bin/gunicorn
 ls -la /var/www/retro_site/staticfiles/your_app/retro90.css
+curl -i http://127.0.0.1/
 ```
 
 С внешней машины:
@@ -66,7 +88,23 @@ ls -la /var/www/retro_site/staticfiles/your_app/retro90.css
 curl -fsS http://YOUR_SERVER_IP/
 ```
 
-## Как сломать кейс для кандидата
+## Как playbook ломает кейс для кандидата
+
+По умолчанию включена поломка `nginx_socket`: playbook заменяет в nginx socket `/run/retro_site/gunicorn.sock` на `/run/retro_site/missing.sock`, проверяет `nginx -t` и reload nginx.
+
+Чтобы сломать systemd unit вместо nginx:
+
+```bash
+ansible-playbook -i inventory.ini vps1.6-webstack.yml -e break_case_type=systemd_venv
+```
+
+Чтобы применить обе поломки:
+
+```bash
+ansible-playbook -i inventory.ini vps1.6-webstack.yml -e break_case_type=both
+```
+
+Ниже те же поломки описаны вручную, если нужно подготовить стенд без Ansible.
 
 ### Поломка 1: неправильный путь к gunicorn в systemd
 
@@ -132,10 +170,10 @@ curl -i http://127.0.0.1/
 
 ## Как вернуть рабочее состояние
 
-Самый чистый способ: повторно применить Ansible. Он перезапишет systemd unit и nginx config из шаблонов, перезапустит сервисы и выполнит health-check.
+Самый чистый способ: повторно применить Ansible с отключённой учебной поломкой. Он перезапишет systemd unit и nginx config из шаблонов, перезапустит сервисы и выполнит health-check.
 
 ```bash
-ansible-playbook -i inventory.ini playbook.yml
+ansible-playbook -i inventory.ini vps1.6-webstack.yml -e break_case_enabled=false
 ```
 
 Ручное восстановление пути gunicorn:
@@ -160,4 +198,3 @@ nginx -t
 systemctl reload nginx
 curl -fsS http://127.0.0.1/ | grep 'DJANGO CENTRAL 1999'
 ```
-

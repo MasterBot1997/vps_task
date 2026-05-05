@@ -26,3 +26,8 @@ requirements:
   - django==5.0.7
   - gunicorn==22.0.0
 
+# Training break mode. The playbook deploys and health-checks the working site,
+# then intentionally leaves one misconfiguration for the candidate.
+break_case_enabled: true
+break_case_type: nginx_socket
+broken_socket_path: /run/retro_site/missing.sock

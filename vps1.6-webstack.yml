@@ -204,3 +204,60 @@
       register: healthcheck
       changed_when: false
       failed_when: "'DJANGO CENTRAL 1999' not in healthcheck.stdout"
+
+    - name: Break case | Point systemd to wrong virtualenv path
+      ansible.builtin.replace:
+        path: "/etc/systemd/system/{{ service_name }}.service"
+        regexp: "{{ venv_dir | regex_escape }}"
+        replace: "{{ app_dir }}/venv"
+      when:
+        - break_case_enabled | bool
+        - break_case_type in ['systemd_venv', 'both']
+
+    - name: Break case | Reload systemd after broken unit
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when:
+        - break_case_enabled | bool
+        - break_case_type in ['systemd_venv', 'both']
+
+    - name: Break case | Restart service with broken unit
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted
+        enabled: true
+      register: broken_service_restart
+      failed_when: false
+      when:
+        - break_case_enabled | bool
+        - break_case_type in ['systemd_venv', 'both']
+
+    - name: Break case | Point nginx to missing gunicorn socket
+      ansible.builtin.replace:
+        path: "/etc/nginx/sites-available/{{ nginx_site_name }}"
+        regexp: "{{ socket_path | regex_escape }}"
+        replace: "{{ broken_socket_path }}"
+      when:
+        - break_case_enabled | bool
+        - break_case_type in ['nginx_socket', 'both']
+
+    - name: Break case | Test nginx config after broken socket
+      ansible.builtin.command: nginx -t
+      changed_when: false
+      when:
+        - break_case_enabled | bool
+        - break_case_type in ['nginx_socket', 'both']
+
+    - name: Break case | Reload nginx after broken socket
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+        enabled: true
+      when:
+        - break_case_enabled | bool
+        - break_case_type in ['nginx_socket', 'both']
+
+    - name: Break case | Show intentionally broken state
+      ansible.builtin.debug:
+        msg: "Training break applied: {{ break_case_type }}. Restore with: ansible-playbook -i inventory.ini vps1.6-webstack.yml -e break_case_enabled=false"
+      when: break_case_enabled | bool
