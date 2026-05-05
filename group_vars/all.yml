@@ -29,5 +29,5 @@ requirements:
 # Training break mode. The playbook deploys and health-checks the working site,
 # then intentionally leaves one misconfiguration for the candidate.
 break_case_enabled: true
-break_case_type: nginx_socket
+break_case_type: both
 broken_socket_path: /run/retro_site/missing.sock

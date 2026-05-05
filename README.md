@@ -49,10 +49,10 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/
 
 ```yaml
 break_case_enabled: true
-break_case_type: nginx_socket
+break_case_type: both
 ```
 
-Доступные значения `break_case_type`: `nginx_socket`, `systemd_venv`, `both`.
+Доступные значения `break_case_type`: `both`, `nginx_socket`, `systemd_venv`.
 
 ```bash
 ansible-playbook -i inventory.ini vps1.6-webstack.yml
@@ -90,7 +90,7 @@ curl -fsS http://YOUR_SERVER_IP/
 
 ## Как playbook ломает кейс для кандидата
 
-По умолчанию включена поломка `nginx_socket`: playbook заменяет в nginx socket `/run/retro_site/gunicorn.sock` на `/run/retro_site/missing.sock`, проверяет `nginx -t` и reload nginx.
+По умолчанию включена поломка `both`: playbook ломает путь к virtualenv в systemd unit и заменяет в nginx socket `/run/retro_site/gunicorn.sock` на `/run/retro_site/missing.sock`, затем проверяет `nginx -t` и reload nginx.
 
 Чтобы сломать systemd unit вместо nginx:
 
