@@ -1,0 +1,206 @@
+---
+- name: Deploy Django retro web stack
+  hosts: web
+  become: true
+
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Restart retro_site
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted
+        enabled: true
+
+    - name: Test nginx config
+      ansible.builtin.command: nginx -t
+      changed_when: false
+
+    - name: Reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+        enabled: true
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install system packages
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - python3
+          - python3-venv
+          - python3-pip
+          - curl
+        state: present
+
+    - name: Ensure app user exists
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        group: "{{ app_group }}"
+        system: true
+        shell: /usr/sbin/nologin
+        home: "{{ app_dir }}"
+        create_home: false
+
+    - name: Ensure project directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0755"
+      loop:
+        - "{{ app_dir }}"
+        - "{{ app_dir }}/{{ project_name }}"
+        - "{{ app_dir }}/{{ django_app_name }}"
+        - "{{ app_dir }}/{{ django_app_name }}/templates/{{ django_app_name }}"
+        - "{{ app_dir }}/{{ django_app_name }}/static/{{ django_app_name }}"
+        - "{{ static_root }}"
+
+    - name: Render manage.py
+      ansible.builtin.template:
+        src: manage.py.j2
+        dest: "{{ app_dir }}/manage.py"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0755"
+      notify: Restart retro_site
+
+    - name: Render Django project files
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0644"
+      loop:
+        - src: django_settings.py.j2
+          dest: "{{ app_dir }}/{{ project_name }}/settings.py"
+        - src: urls.py.j2
+          dest: "{{ app_dir }}/{{ project_name }}/urls.py"
+        - src: wsgi.py.j2
+          dest: "{{ app_dir }}/{{ project_name }}/wsgi.py"
+        - src: views.py.j2
+          dest: "{{ app_dir }}/{{ django_app_name }}/views.py"
+        - src: index.html.j2
+          dest: "{{ app_dir }}/{{ django_app_name }}/templates/{{ django_app_name }}/index.html"
+        - src: retro90.css.j2
+          dest: "{{ app_dir }}/{{ django_app_name }}/static/{{ django_app_name }}/retro90.css"
+      notify: Restart retro_site
+
+    - name: Create Python package markers
+      ansible.builtin.copy:
+        content: ""
+        dest: "{{ item }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0644"
+        force: false
+      loop:
+        - "{{ app_dir }}/{{ project_name }}/__init__.py"
+        - "{{ app_dir }}/{{ django_app_name }}/__init__.py"
+
+    - name: Create requirements.txt
+      ansible.builtin.copy:
+        content: "{{ requirements | join('\n') }}\n"
+        dest: "{{ app_dir }}/requirements.txt"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0644"
+
+    - name: Create virtualenv
+      ansible.builtin.command:
+        cmd: "python3 -m venv {{ venv_dir }}"
+        creates: "{{ venv_dir }}/bin/python"
+
+    - name: Install Python requirements into virtualenv
+      ansible.builtin.pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        executable: "{{ venv_dir }}/bin/pip"
+
+    - name: Run Django migrations
+      ansible.builtin.command:
+        cmd: "{{ venv_dir }}/bin/python manage.py migrate --noinput"
+        chdir: "{{ app_dir }}"
+      environment:
+        PATH: "{{ venv_dir }}/bin:{{ ansible_env.PATH }}"
+      changed_when: false
+
+    - name: Collect Django static files
+      ansible.builtin.command:
+        cmd: "{{ venv_dir }}/bin/python manage.py collectstatic --noinput"
+        chdir: "{{ app_dir }}"
+      environment:
+        PATH: "{{ venv_dir }}/bin:{{ ansible_env.PATH }}"
+      changed_when: false
+
+    - name: Ensure project ownership after generated files
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        recurse: true
+
+    - name: Install systemd unit
+      ansible.builtin.template:
+        src: gunicorn.service.j2
+        dest: "/etc/systemd/system/{{ service_name }}.service"
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Reload systemd
+        - Restart retro_site
+
+    - name: Enable and start Django service
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: started
+        enabled: true
+        daemon_reload: true
+
+    - name: Install nginx site config
+      ansible.builtin.template:
+        src: nginx_site.conf.j2
+        dest: "/etc/nginx/sites-available/{{ nginx_site_name }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Test nginx config
+        - Reload nginx
+
+    - name: Disable default nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify:
+        - Test nginx config
+        - Reload nginx
+
+    - name: Enable retro_site nginx site
+      ansible.builtin.file:
+        src: "/etc/nginx/sites-available/{{ nginx_site_name }}"
+        dest: "/etc/nginx/sites-enabled/{{ nginx_site_name }}"
+        state: link
+        force: true
+      notify:
+        - Test nginx config
+        - Reload nginx
+
+    - name: Flush handlers before health-check
+      ansible.builtin.meta: flush_handlers
+
+    - name: Health-check Django through nginx
+      ansible.builtin.command: curl -fsS http://127.0.0.1/
+      register: healthcheck
+      changed_when: false
+      failed_when: "'DJANGO CENTRAL 1999' not in healthcheck.stdout"

@@ -1,0 +1,17 @@
+server {
+    listen 80;
+    server_name _;
+
+    access_log /var/log/nginx/{{ nginx_site_name }}.access.log;
+    error_log /var/log/nginx/{{ nginx_site_name }}.error.log;
+
+    location /static/ {
+        alias {{ static_root }}/;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:{{ socket_path }};
+    }
+}
+

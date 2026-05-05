@@ -1,0 +1,28 @@
+---
+app_user: webapp
+app_group: www-data
+
+project_name: retro_site
+django_app_name: your_app
+
+app_dir: /var/www/retro_site
+venv_dir: /var/www/retro_site/.venv
+socket_path: /run/retro_site/gunicorn.sock
+run_dir: /run/retro_site
+
+service_name: retro_site
+nginx_site_name: retro_site
+
+django_secret_key: "training-retro-site-insecure-secret-key"
+django_debug: true
+django_allowed_hosts:
+  - "*"
+  - "127.0.0.1"
+  - "localhost"
+
+static_root: /var/www/retro_site/staticfiles
+
+requirements:
+  - django==5.0.7
+  - gunicorn==22.0.0
+
