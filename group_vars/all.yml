@@ -10,8 +10,10 @@ venv_dir: /var/www/retro_site/.venv
 socket_path: /run/retro_site/gunicorn.sock
 run_dir: /run/retro_site
 
-service_name: retro_site
+service_name: gunicorn
 nginx_site_name: retro_site
+legacy_service_names:
+  - retro_site
 
 django_secret_key: "training-retro-site-insecure-secret-key"
 django_debug: true

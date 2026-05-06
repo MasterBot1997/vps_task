@@ -11,7 +11,7 @@
 - App dir: `/var/www/retro_site`
 - Virtualenv: `/var/www/retro_site/.venv`
 - Gunicorn socket: `/run/retro_site/gunicorn.sock`
-- Systemd service: `retro_site.service`
+- Systemd service: `gunicorn.service`
 - Nginx site: `retro_site`
 - Static root: `/var/www/retro_site/staticfiles`
 - HTTP port: `80`
@@ -74,7 +74,7 @@ curl -fsS http://127.0.0.1/
 ## Проверка сломанного стенда
 
 ```bash
-systemctl status retro_site --no-pager
+systemctl status gunicorn --no-pager
 systemctl status nginx --no-pager
 ss -xlpn | grep /run/retro_site/gunicorn.sock
 nginx -t
@@ -112,7 +112,7 @@ ansible-playbook -i inventory.ini vps1.6-webstack.yml -e break_case_type=both
 Откройте unit:
 
 ```bash
-nano /etc/systemd/system/retro_site.service
+nano /etc/systemd/system/gunicorn.service
 ```
 
 Замените:
@@ -133,11 +133,11 @@ ExecStart=/var/www/retro_site/venv/bin/gunicorn \
 
 ```bash
 systemctl daemon-reload
-systemctl restart retro_site
-systemctl status retro_site --no-pager
+systemctl restart gunicorn
+systemctl status gunicorn --no-pager
 ```
 
-Ожидаемый симптом: `retro_site.service` не стартует, nginx отдаёт `502 Bad Gateway`.
+Ожидаемый симптом: `gunicorn.service` не стартует, nginx отдаёт `502 Bad Gateway`.
 
 ### Поломка 2: неправильный socket в nginx
 
@@ -213,7 +213,7 @@ proxy_pass http://unix:/run/retro_site/gunicorn.sock;
 
 ```bash
 systemctl daemon-reload
-systemctl restart retro_site
+systemctl restart gunicorn
 systemctl enable --now nginx
 nginx -t
 systemctl reload nginx

@@ -6,7 +6,7 @@ After=network.target
 User={{ app_user }}
 Group={{ app_group }}
 WorkingDirectory={{ app_dir }}
-RuntimeDirectory={{ service_name }}
+RuntimeDirectory={{ project_name }}
 RuntimeDirectoryMode=0755
 Environment="PATH={{ venv_dir }}/bin"
 ExecStart={{ venv_dir }}/bin/gunicorn \
@@ -17,4 +17,3 @@ ExecStart={{ venv_dir }}/bin/gunicorn \
 
 [Install]
 WantedBy=multi-user.target
-

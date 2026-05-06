@@ -8,7 +8,7 @@
       ansible.builtin.systemd:
         daemon_reload: true
 
-    - name: Restart retro_site
+    - name: Restart gunicorn
       ansible.builtin.systemd:
         name: "{{ service_name }}"
         state: restarted
@@ -71,7 +71,7 @@
         owner: "{{ app_user }}"
         group: "{{ app_group }}"
         mode: "0755"
-      notify: Restart retro_site
+      notify: Restart gunicorn
 
     - name: Render Django project files
       ansible.builtin.template:
@@ -93,7 +93,7 @@
           dest: "{{ app_dir }}/{{ django_app_name }}/templates/{{ django_app_name }}/index.html"
         - src: retro90.css.j2
           dest: "{{ app_dir }}/{{ django_app_name }}/static/{{ django_app_name }}/retro90.css"
-      notify: Restart retro_site
+      notify: Restart gunicorn
 
     - name: Create Python package markers
       ansible.builtin.copy:
@@ -149,6 +149,23 @@
         group: "{{ app_group }}"
         recurse: true
 
+    - name: Stop and disable legacy app services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      failed_when: false
+      loop: "{{ legacy_service_names | default([]) }}"
+      when: item != service_name
+
+    - name: Remove legacy app service units
+      ansible.builtin.file:
+        path: "/etc/systemd/system/{{ item }}.service"
+        state: absent
+      loop: "{{ legacy_service_names | default([]) }}"
+      when: item != service_name
+      notify: Reload systemd
+
     - name: Install systemd unit
       ansible.builtin.template:
         src: gunicorn.service.j2
@@ -158,7 +175,7 @@
         mode: "0644"
       notify:
         - Reload systemd
-        - Restart retro_site
+        - Restart gunicorn
 
     - name: Enable and start Django service
       ansible.builtin.systemd:
@@ -195,6 +212,12 @@
       notify:
         - Test nginx config
         - Reload nginx
+
+    - name: Ensure nginx is started before health-check
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: true
 
     - name: Flush handlers before health-check
       ansible.builtin.meta: flush_handlers
