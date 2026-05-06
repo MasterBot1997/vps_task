@@ -90,7 +90,7 @@ curl -fsS http://YOUR_SERVER_IP/
 
 ## Как playbook ломает кейс для кандидата
 
-По умолчанию включена поломка `both`: playbook ломает путь к virtualenv в systemd unit и заменяет в nginx socket `/run/retro_site/gunicorn.sock` на `/run/retro_site/missing.sock`, затем проверяет `nginx -t` и reload nginx.
+По умолчанию включена поломка `both`: playbook ломает путь к virtualenv в systemd unit и заменяет в nginx socket `/run/retro_site/gunicorn.sock` на `/run/retro_site/gunicrn.sock`, затем проверяет `nginx -t` и reload nginx.
 
 Чтобы сломать systemd unit вместо nginx:
 
@@ -155,7 +155,7 @@ proxy_pass http://unix:/run/retro_site/gunicorn.sock;
 на:
 
 ```nginx
-proxy_pass http://unix:/run/retro_site/missing.sock;
+proxy_pass http://unix:/run/retro_site/gunicrn.sock;
 ```
 
 Примените:
