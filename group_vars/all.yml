@@ -31,3 +31,4 @@ requirements:
 break_case_enabled: true
 break_case_type: both
 broken_socket_path: /run/retro_site/gunicrn.sock
+break_case_disable_nginx: true

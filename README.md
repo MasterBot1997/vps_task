@@ -50,6 +50,7 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/
 ```yaml
 break_case_enabled: true
 break_case_type: both
+break_case_disable_nginx: true
 ```
 
 Доступные значения `break_case_type`: `both`, `nginx_socket`, `systemd_venv`.
@@ -68,7 +69,7 @@ Playbook сам выполняет health-check до внесения полом
 curl -fsS http://127.0.0.1/
 ```
 
-Если `break_case_enabled: true`, после завершения playbook внешний HTTP-запрос ожидаемо может вернуть `502 Bad Gateway`.
+Если `break_case_enabled: true`, playbook имитирует легенду: сайт обновили, получили `502 Bad Gateway`, попробовали reboot, но после reboot nginx уже disabled и stopped. После завершения playbook внешний HTTP-запрос может вернуть connection refused или другой симптом недоступного nginx.
 
 ## Проверка сломанного стенда
 
@@ -90,7 +91,7 @@ curl -fsS http://YOUR_SERVER_IP/
 
 ## Как playbook ломает кейс для кандидата
 
-По умолчанию включена поломка `both`: playbook ломает путь к virtualenv в systemd unit и заменяет в nginx socket `/run/retro_site/gunicorn.sock` на `/run/retro_site/gunicrn.sock`, затем проверяет `nginx -t` и reload nginx.
+По умолчанию включена поломка `both`: playbook ломает путь к virtualenv в systemd unit и заменяет в nginx socket `/run/retro_site/gunicorn.sock` на `/run/retro_site/gunicrn.sock`, затем проверяет `nginx -t`, reload nginx, останавливает nginx и выключает его из автозагрузки.
 
 Чтобы сломать systemd unit вместо nginx:
 
@@ -168,6 +169,25 @@ curl -i http://127.0.0.1/
 
 Ожидаемый симптом: gunicorn работает, но nginx не может подключиться к socket и отдаёт `502 Bad Gateway`.
 
+### Поломка 3: nginx остановлен и disabled
+
+Playbook дополнительно выполняет:
+
+```bash
+systemctl disable --now nginx
+```
+
+Это имитирует историю: после обновления был `502 Bad Gateway`, затем кто-то попробовал reboot, но nginx не поднялся автоматически.
+
+Ожидаемый симптом:
+
+```bash
+systemctl status nginx --no-pager
+curl -i http://127.0.0.1/
+```
+
+Кандидат должен заметить, что nginx не запущен и выключен из автозагрузки.
+
 ## Как вернуть рабочее состояние
 
 Самый чистый способ: повторно применить Ansible с отключённой учебной поломкой. Он перезапишет systemd unit и nginx config из шаблонов, перезапустит сервисы и выполнит health-check.
@@ -194,6 +214,7 @@ proxy_pass http://unix:/run/retro_site/gunicorn.sock;
 ```bash
 systemctl daemon-reload
 systemctl restart retro_site
+systemctl enable --now nginx
 nginx -t
 systemctl reload nginx
 curl -fsS http://127.0.0.1/ | grep 'DJANGO CENTRAL 1999'

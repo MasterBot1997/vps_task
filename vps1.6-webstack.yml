@@ -257,7 +257,16 @@
         - break_case_enabled | bool
         - break_case_type in ['nginx_socket', 'both']
 
+    - name: Break case | Stop and disable nginx after simulated failed reboot
+      ansible.builtin.systemd:
+        name: nginx
+        state: stopped
+        enabled: false
+      when:
+        - break_case_enabled | bool
+        - break_case_disable_nginx | bool
+
     - name: Break case | Show intentionally broken state
       ansible.builtin.debug:
-        msg: "Training break applied: {{ break_case_type }}. Restore with: ansible-playbook -i inventory.ini vps1.6-webstack.yml -e break_case_enabled=false"
+        msg: "Training break applied: {{ break_case_type }}; nginx disabled={{ break_case_disable_nginx }}. Restore with: ansible-playbook -i inventory.ini vps1.6-webstack.yml -e break_case_enabled=false"
       when: break_case_enabled | bool
