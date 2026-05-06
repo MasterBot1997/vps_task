@@ -53,7 +53,7 @@ vps2.6-opencart-move-fastpanel/
 5. Создаёт БД `lowrain` и пользователя `lowbrain_usr`.
 6. Скачивает официальный архив OpenCart.
 7. Копирует содержимое `upload/` в site root.
-8. Запускает `composer install` для OpenCart-зависимостей, включая Twig.
+8. Копирует `composer.json`, исправляет vendor-dir на `system/storage/vendor` и запускает `composer install` для OpenCart-зависимостей, включая Twig.
 9. Генерирует `config.php` и `admin/config.php`.
 10. Включает Redis cache engine для OpenCart.
 11. Создаёт `.htaccess` и `.user.ini` с повышенными PHP limits.

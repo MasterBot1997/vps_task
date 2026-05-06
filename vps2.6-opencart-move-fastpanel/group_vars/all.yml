@@ -56,7 +56,7 @@ old_site_root: "/var/www/old-site"
 backup_dir: "/root/opencart_backup"
 db_dump_path: ""
 
-storage_dir: "{{ site_root }}/storage"
+storage_dir: "{{ site_root }}/system/storage"
 opencart_tmp_dir: "/tmp/opencart-{{ site_domain }}"
 opencart_archive_path: "{{ opencart_tmp_dir }}/opencart.zip"
 

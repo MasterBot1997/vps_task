@@ -50,6 +50,43 @@
     force: false
   when: not opencart_index.stat.exists
 
+- name: Check OpenCart source composer.json
+  ansible.builtin.stat:
+    path: "{{ opencart_tmp_dir }}/composer.json"
+  register: opencart_source_composer_json
+
+- name: Copy OpenCart composer.json into site root
+  ansible.builtin.copy:
+    src: "{{ opencart_tmp_dir }}/composer.json"
+    dest: "{{ site_root }}/composer.json"
+    remote_src: true
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+  when: opencart_source_composer_json.stat.exists
+
+- name: Check OpenCart source composer.lock
+  ansible.builtin.stat:
+    path: "{{ opencart_tmp_dir }}/composer.lock"
+  register: opencart_source_composer_lock
+
+- name: Copy OpenCart composer.lock into site root
+  ansible.builtin.copy:
+    src: "{{ opencart_tmp_dir }}/composer.lock"
+    dest: "{{ site_root }}/composer.lock"
+    remote_src: true
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+  when: opencart_source_composer_lock.stat.exists
+
+- name: Point Composer vendor-dir at installed OpenCart storage directory
+  ansible.builtin.replace:
+    path: "{{ site_root }}/composer.json"
+    regexp: '"vendor-dir"\\s*:\\s*"\\./upload/system/storage/vendor/"'
+    replace: '"vendor-dir": "./system/storage/vendor/"'
+  when: opencart_source_composer_json.stat.exists
+
 - name: Check OpenCart composer.json
   ansible.builtin.stat:
     path: "{{ site_root }}/composer.json"
@@ -67,7 +104,7 @@
 
 - name: Verify Composer autoload exists
   ansible.builtin.stat:
-    path: "{{ site_root }}/vendor/autoload.php"
+    path: "{{ storage_dir }}/vendor/autoload.php"
   register: opencart_vendor_autoload
   when: opencart_composer_json.stat.exists
 
@@ -75,5 +112,5 @@
   ansible.builtin.assert:
     that:
       - opencart_vendor_autoload.stat.exists
-    fail_msg: "OpenCart composer.json exists, but vendor/autoload.php was not created. Check Composer output and network access."
+    fail_msg: "OpenCart composer.json exists, but {{ storage_dir }}/vendor/autoload.php was not created. Check Composer output and network access."
   when: opencart_composer_json.stat.exists
