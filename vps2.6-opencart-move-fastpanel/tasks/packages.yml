@@ -23,6 +23,7 @@
       - curl
       - wget
       - rsync
+      - composer
       - python3-pymysql
       - python3-passlib
     state: present

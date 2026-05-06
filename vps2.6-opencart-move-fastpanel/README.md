@@ -46,17 +46,18 @@ vps2.6-opencart-move-fastpanel/
 ## Что Делает
 
 1. Проверяет, что исходный сервер Ubuntu 24.04+.
-2. Ставит пакеты nginx, PHP-FPM, PHP extensions, MySQL, unzip, curl, wget, rsync, python3-pymysql.
+2. Ставит пакеты nginx, PHP-FPM, PHP extensions, MySQL, unzip, curl, wget, rsync, composer, python3-pymysql.
 3. Настраивает PHP-параметры.
 4. Создаёт директорию сайта `/var/www/<домен>`.
 5. Создаёт БД `lowrain` и пользователя `lowbrain_usr`.
 6. Скачивает официальный архив OpenCart.
 7. Копирует содержимое `upload/` в site root.
-8. Генерирует `config.php` и `admin/config.php`.
-9. Создаёт `.htaccess` и `.user.ini` с повышенными PHP limits.
-10. Создаёт nginx vhost и отключает default site.
-11. Создаёт скрытые диагностические PHP-файлы и открывает их через товарные URL.
-12. Выполняет финальные проверки главной, `/admin/`, БД и diagnostics.
+8. Запускает `composer install` для OpenCart-зависимостей, включая Twig.
+9. Генерирует `config.php` и `admin/config.php`.
+10. Создаёт `.htaccess` и `.user.ini` с повышенными PHP limits.
+11. Создаёт nginx vhost и отключает default site.
+12. Создаёт скрытые диагностические PHP-файлы и открывает их через товарные URL.
+13. Выполняет финальные проверки главной, `/admin/`, БД и diagnostics.
 
 ## Before Running
 

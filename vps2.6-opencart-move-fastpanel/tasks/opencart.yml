@@ -49,3 +49,31 @@
     mode: "0644"
     force: false
   when: not opencart_index.stat.exists
+
+- name: Check OpenCart composer.json
+  ansible.builtin.stat:
+    path: "{{ site_root }}/composer.json"
+  register: opencart_composer_json
+
+- name: Install OpenCart Composer dependencies
+  ansible.builtin.command:
+    cmd: composer install --no-dev --no-interaction --optimize-autoloader
+    chdir: "{{ site_root }}"
+  environment:
+    COMPOSER_ALLOW_SUPERUSER: "1"
+  register: opencart_composer_install
+  changed_when: "'Nothing to install' not in opencart_composer_install.stdout"
+  when: opencart_composer_json.stat.exists
+
+- name: Verify Composer autoload exists
+  ansible.builtin.stat:
+    path: "{{ site_root }}/vendor/autoload.php"
+  register: opencart_vendor_autoload
+  when: opencart_composer_json.stat.exists
+
+- name: Assert Composer dependencies are installed
+  ansible.builtin.assert:
+    that:
+      - opencart_vendor_autoload.stat.exists
+    fail_msg: "OpenCart composer.json exists, but vendor/autoload.php was not created. Check Composer output and network access."
+  when: opencart_composer_json.stat.exists
