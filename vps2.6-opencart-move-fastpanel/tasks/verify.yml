@@ -40,15 +40,13 @@
 
 - name: Verify path diagnostics
   ansible.builtin.uri:
-    url: "http://127.0.0.1/{{ item }}.php"
+    url: "http://127.0.0.1/index.php?route=product/product&product_id={{ item.product_id }}"
     method: GET
     headers:
       Host: "{{ site_domain }}"
     status_code: 200
     return_content: true
-  loop:
-    - path-check-1
-    - path-check-2
+  loop: "{{ path_diagnostic_products }}"
   register: diagnostics_check
   when: enable_path_diagnostics | bool
 

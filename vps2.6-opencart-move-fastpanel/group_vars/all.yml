@@ -37,6 +37,13 @@ path_diagnostics_basic_auth: false
 path_diagnostics_user: "pathcheck"
 path_diagnostics_password: "PathCheck-9xQ4-vR7m"
 path_diagnostics_htpasswd: "{{ site_root }}/.path-check.htpasswd"
+path_diagnostic_products:
+  - product_id: 43
+    page_name: "product-43"
+    script_name: ".catalog-product-43.php"
+  - product_id: 40
+    page_name: "product-40"
+    script_name: ".catalog-product-40.php"
 
 migration_mode: false
 old_server: ""

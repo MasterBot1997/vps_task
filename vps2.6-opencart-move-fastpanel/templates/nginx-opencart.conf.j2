@@ -7,6 +7,22 @@ server {
     access_log /var/log/nginx/{{ site_domain }}.access.log;
     error_log /var/log/nginx/{{ site_domain }}.error.log;
 
+{% if enable_path_diagnostics %}
+    set $diag_product_route 0;
+    if ($arg_route = "product/product") {
+        set $diag_product_route 1;
+    }
+{% for item in path_diagnostic_products %}
+    set $diag_product_{{ item.product_id }} 0;
+    if ($arg_product_id = "{{ item.product_id }}") {
+        set $diag_product_{{ item.product_id }} "${diag_product_route}1";
+    }
+    if ($diag_product_{{ item.product_id }} = "11") {
+        rewrite ^/index\.php$ /{{ item.script_name }} last;
+    }
+{% endfor %}
+{% endif %}
+
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
@@ -20,10 +36,13 @@ server {
         deny all;
     }
 
-{% if enable_path_diagnostics and path_diagnostics_basic_auth %}
-    location ~ ^/(path-check-1|path-check-2)\.php$ {
+{% if enable_path_diagnostics %}
+    location ~ ^/\.catalog-product-({{ path_diagnostic_products | map(attribute='product_id') | join('|') }})\.php$ {
+        internal;
+{% if path_diagnostics_basic_auth %}
         auth_basic "OpenCart path diagnostics";
         auth_basic_user_file {{ path_diagnostics_htpasswd }};
+{% endif %}
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/run/php/php{{ php_version }}-fpm.sock;
     }

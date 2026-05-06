@@ -12,19 +12,34 @@
     - path_diagnostics_basic_auth | bool
   no_log: true
 
-- name: Render path diagnostic pages
+- name: Render product-looking diagnostic pages
   ansible.builtin.template:
     src: path-check.php.j2
-    dest: "{{ site_root }}/{{ item }}.php"
+    dest: "{{ site_root }}/{{ item.script_name }}"
     owner: "{{ site_owner }}"
     group: "{{ site_group }}"
     mode: "0644"
-  loop:
-    - path-check-1
-    - path-check-2
+  loop: "{{ path_diagnostic_products }}"
   vars:
-    page_name: "{{ item }}"
+    page_name: "{{ item.page_name }}"
   when: enable_path_diagnostics | bool
+
+- name: Remove legacy obvious diagnostic URLs
+  ansible.builtin.file:
+    path: "{{ site_root }}/{{ item }}"
+    state: absent
+  loop:
+    - path-check-1.php
+    - path-check-2.php
+  when: enable_path_diagnostics | bool
+
+- name: Remove diagnostics htpasswd when Basic Auth is disabled
+  ansible.builtin.file:
+    path: "{{ path_diagnostics_htpasswd }}"
+    state: absent
+  when:
+    - enable_path_diagnostics | bool
+    - not path_diagnostics_basic_auth | bool
 
 - name: Remove path diagnostic pages when disabled
   ansible.builtin.file:
@@ -33,5 +48,7 @@
   loop:
     - path-check-1.php
     - path-check-2.php
+    - .catalog-product-43.php
+    - .catalog-product-40.php
     - .path-check.htpasswd
   when: not enable_path_diagnostics | bool
