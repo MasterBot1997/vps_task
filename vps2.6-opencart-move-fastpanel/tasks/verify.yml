@@ -44,9 +44,6 @@
     method: GET
     headers:
       Host: "{{ site_domain }}"
-    user: "{{ path_diagnostics_user if path_diagnostics_basic_auth else omit }}"
-    password: "{{ path_diagnostics_password if path_diagnostics_basic_auth else omit }}"
-    force_basic_auth: "{{ path_diagnostics_basic_auth }}"
     status_code: 200
     return_content: true
   loop:
@@ -54,7 +51,6 @@
     - path-check-2
   register: diagnostics_check
   when: enable_path_diagnostics | bool
-  no_log: true
 
 - name: Show final check summary
   ansible.builtin.debug:

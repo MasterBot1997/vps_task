@@ -154,7 +154,13 @@ Each page stores the first observed absolute site path in `oc_path_guard`. Later
 - same path: HTTP 200 with `OK`;
 - mismatch: HTTP 500 with `Path mismatch. Expected: ... Current: ...`.
 
-Basic Auth is enabled by default.
+Diagnostics are public by default because they are part of the candidate-facing migration check. The OpenCart admin credentials are used for the CMS admin user, not for these pages.
+
+Optional Basic Auth can still be enabled if needed:
+
+```yaml
+path_diagnostics_basic_auth: true
+```
 
 Disable diagnostics:
 
@@ -182,8 +188,8 @@ Manual checks:
 curl -I -H 'Host: shop.example.com' http://127.0.0.1/
 curl -I -H 'Host: shop.example.com' http://127.0.0.1/admin/
 mysql -u lowbrain_usr -p lowrain -e 'SELECT DATABASE();'
-curl -u pathcheck:PathCheck-9xQ4-vR7m -H 'Host: shop.example.com' http://127.0.0.1/path-check-1.php
-curl -u pathcheck:PathCheck-9xQ4-vR7m -H 'Host: shop.example.com' http://127.0.0.1/path-check-2.php
+curl -H 'Host: shop.example.com' http://127.0.0.1/path-check-1.php
+curl -H 'Host: shop.example.com' http://127.0.0.1/path-check-2.php
 ```
 
 From outside, after DNS points to the VPS:

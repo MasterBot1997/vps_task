@@ -33,7 +33,7 @@ remove_install_dir: true
 show_credentials_after_install: false
 
 enable_path_diagnostics: true
-path_diagnostics_basic_auth: true
+path_diagnostics_basic_auth: false
 path_diagnostics_user: "pathcheck"
 path_diagnostics_password: "PathCheck-9xQ4-vR7m"
 path_diagnostics_htpasswd: "{{ site_root }}/.path-check.htpasswd"
