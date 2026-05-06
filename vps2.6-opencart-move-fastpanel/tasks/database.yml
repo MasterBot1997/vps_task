@@ -1,0 +1,50 @@
+---
+- name: Dump existing database before changes
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    state: dump
+    target: "{{ backup_dir }}/{{ db_name }}-prechange.sql"
+    login_unix_socket: "{{ mysql_login_unix_socket }}"
+  when: migration_mode | bool
+  failed_when: false
+  no_log: true
+
+- name: Ensure OpenCart database exists
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    state: present
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
+    login_unix_socket: "{{ mysql_login_unix_socket }}"
+
+- name: Ensure OpenCart database user exists
+  community.mysql.mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    host: "{{ mysql_host }}"
+    priv: "{{ db_name }}.*:ALL"
+    state: present
+    login_unix_socket: "{{ mysql_login_unix_socket }}"
+  no_log: true
+
+- name: Import provided database dump
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    state: import
+    target: "{{ db_dump_path }}"
+    login_unix_socket: "{{ mysql_login_unix_socket }}"
+  when:
+    - migration_mode | bool
+    - db_dump_path | length > 0
+  no_log: true
+
+- name: Verify database connection as OpenCart user
+  community.mysql.mysql_query:
+    login_host: "{{ mysql_host }}"
+    login_port: "{{ mysql_port }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_db: "{{ db_name }}"
+    query: "SELECT 1 AS ok"
+  register: db_connection_check
+  no_log: true

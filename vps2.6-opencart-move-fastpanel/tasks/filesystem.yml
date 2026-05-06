@@ -1,0 +1,34 @@
+---
+- name: Create backup directory
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: migration_mode | bool
+
+- name: Create site root
+  ansible.builtin.file:
+    path: "{{ site_root }}"
+    state: directory
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0755"
+
+- name: Create OpenCart storage directories
+  ansible.builtin.file:
+    path: "{{ site_root }}/{{ item }}"
+    state: directory
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0775"
+  loop: "{{ writable_dirs }}"
+
+- name: Create temporary download directory
+  ansible.builtin.file:
+    path: "{{ opencart_tmp_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

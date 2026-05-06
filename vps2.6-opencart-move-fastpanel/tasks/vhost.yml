@@ -1,0 +1,28 @@
+---
+- name: Install managed nginx vhost
+  ansible.builtin.template:
+    src: nginx-opencart.conf.j2
+    dest: "/etc/nginx/sites-available/{{ site_domain }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+  when: web_server == 'nginx'
+
+- name: Enable managed nginx vhost
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ site_domain }}"
+    dest: "/etc/nginx/sites-enabled/{{ site_domain }}"
+    state: link
+  notify: Reload nginx
+  when: web_server == 'nginx'
+
+- name: Validate nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  when: web_server == 'nginx'
+
+- name: Warn about Apache vhost management
+  ansible.builtin.debug:
+    msg: "Apache vhost management is intentionally left for FastPanel unless you add an apache template."
+  when: web_server == 'apache2'

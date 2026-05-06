@@ -1,0 +1,46 @@
+---
+- name: Deploy or migrate OpenCart on FastPanel server
+  hosts: opencart
+  become: true
+  gather_facts: true
+
+  handlers:
+    - name: Import handlers
+      ansible.builtin.import_tasks: handlers/main.yml
+
+  pre_tasks:
+    - name: Check SSH connectivity
+      ansible.builtin.ping:
+
+  tasks:
+    - name: Run preflight checks
+      ansible.builtin.import_tasks: tasks/preflight.yml
+
+    - name: Install packages and tune PHP
+      ansible.builtin.import_tasks: tasks/packages.yml
+
+    - name: Prepare site filesystem
+      ansible.builtin.import_tasks: tasks/filesystem.yml
+
+    - name: Configure database
+      ansible.builtin.import_tasks: tasks/database.yml
+
+    - name: Download and unpack OpenCart
+      ansible.builtin.import_tasks: tasks/opencart.yml
+
+    - name: Run migration tasks
+      ansible.builtin.import_tasks: tasks/migration.yml
+      when: migration_mode | bool
+
+    - name: Configure OpenCart
+      ansible.builtin.import_tasks: tasks/configure.yml
+
+    - name: Configure optional diagnostics
+      ansible.builtin.import_tasks: tasks/diagnostics.yml
+
+    - name: Configure optional vhost
+      ansible.builtin.import_tasks: tasks/vhost.yml
+      when: manage_vhost | bool
+
+    - name: Final verification
+      ansible.builtin.import_tasks: tasks/verify.yml

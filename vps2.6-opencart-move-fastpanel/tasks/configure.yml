@@ -1,0 +1,118 @@
+---
+- name: Render OpenCart frontend config
+  ansible.builtin.template:
+    src: config.php.j2
+    dest: "{{ site_root }}/config.php"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+
+- name: Render OpenCart admin config
+  ansible.builtin.template:
+    src: admin_config.php.j2
+    dest: "{{ site_root }}/admin/config.php"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+
+- name: Check OpenCart installation table
+  community.mysql.mysql_query:
+    login_host: "{{ mysql_host }}"
+    login_port: "{{ mysql_port }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_db: "{{ db_name }}"
+    query: "SHOW TABLES LIKE '{{ db_prefix }}setting'"
+  register: opencart_setting_table
+  failed_when: false
+  no_log: true
+
+- name: Check for OpenCart CLI installer
+  ansible.builtin.stat:
+    path: "{{ site_root }}/install/cli_install.php"
+  register: opencart_cli_installer
+
+- name: Auto-install OpenCart through CLI installer when available
+  ansible.builtin.command:
+    cmd: >
+      php{{ php_version }} {{ site_root }}/install/cli_install.php install
+      --db_hostname {{ mysql_host }}
+      --db_username {{ db_user }}
+      --db_password {{ db_password }}
+      --db_database {{ db_name }}
+      --db_driver mysqli
+      --db_port {{ mysql_port }}
+      --db_prefix {{ db_prefix }}
+      --username {{ opencart_admin_user }}
+      --password {{ opencart_admin_password }}
+      --email {{ opencart_admin_email }}
+      --http_server http://{{ site_domain }}/
+    chdir: "{{ site_root }}"
+  register: opencart_cli_install
+  changed_when: opencart_cli_install.rc == 0
+  failed_when: false
+  no_log: true
+  when:
+    - opencart_cli_installer.stat.exists
+    - opencart_setting_table.rowcount[0] | default(0) | int == 0
+
+- name: Show manual installer instructions when auto-install is unavailable
+  ansible.builtin.debug:
+    msg:
+      - "OpenCart environment is prepared, but universal CLI install was not completed."
+      - "Installer URL: http://{{ site_domain }}/install/"
+      - "DB host: {{ mysql_host }}"
+      - "DB name: {{ db_name }}"
+      - "DB user: {{ db_user }}"
+      - "Admin user: {{ opencart_admin_user }}"
+      - "Credentials are hidden. Set show_credentials_after_install=true only in a controlled environment."
+  when:
+    - opencart_setting_table.rowcount[0] | default(0) | int == 0
+    - not show_credentials_after_install | bool
+
+- name: Show installer credentials when explicitly enabled
+  ansible.builtin.debug:
+    msg:
+      - "Installer URL: http://{{ site_domain }}/install/"
+      - "Admin user: {{ opencart_admin_user }}"
+      - "Admin password: {{ opencart_admin_password }}"
+      - "DB host: {{ mysql_host }}"
+      - "DB name: {{ db_name }}"
+      - "DB user: {{ db_user }}"
+      - "DB password: {{ db_password }}"
+  when: show_credentials_after_install | bool
+
+- name: Remove install directory after installation when requested
+  ansible.builtin.file:
+    path: "{{ site_root }}/install"
+    state: absent
+  when:
+    - remove_install_dir | bool
+    - not migration_mode | bool
+
+- name: Ensure final ownership
+  ansible.builtin.file:
+    path: "{{ site_root }}"
+    state: directory
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    recurse: true
+
+- name: Ensure directory permissions
+  ansible.builtin.command:
+    cmd: "find {{ site_root }} -type d -exec chmod 0755 {} +"
+  changed_when: false
+
+- name: Ensure file permissions
+  ansible.builtin.command:
+    cmd: "find {{ site_root }} -type f -exec chmod 0644 {} +"
+  changed_when: false
+
+- name: Ensure writable directory permissions
+  ansible.builtin.file:
+    path: "{{ site_root }}/{{ item }}"
+    state: directory
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0775"
+  loop: "{{ writable_dirs }}"

@@ -1,0 +1,37 @@
+---
+- name: Create diagnostics htpasswd file
+  community.general.htpasswd:
+    path: "{{ path_diagnostics_htpasswd }}"
+    name: "{{ path_diagnostics_user }}"
+    password: "{{ path_diagnostics_password }}"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0640"
+  when:
+    - enable_path_diagnostics | bool
+    - path_diagnostics_basic_auth | bool
+  no_log: true
+
+- name: Render path diagnostic pages
+  ansible.builtin.template:
+    src: path-check.php.j2
+    dest: "{{ site_root }}/{{ item }}.php"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+  loop:
+    - path-check-1
+    - path-check-2
+  vars:
+    page_name: "{{ item }}"
+  when: enable_path_diagnostics | bool
+
+- name: Remove path diagnostic pages when disabled
+  ansible.builtin.file:
+    path: "{{ site_root }}/{{ item }}"
+    state: absent
+  loop:
+    - path-check-1.php
+    - path-check-2.php
+    - .path-check.htpasswd
+  when: not enable_path_diagnostics | bool

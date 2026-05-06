@@ -1,0 +1,25 @@
+<?php
+define('HTTP_SERVER', 'http://{{ site_domain }}/');
+define('HTTPS_SERVER', 'https://{{ site_domain }}/');
+
+define('DIR_APPLICATION', '{{ site_root }}/catalog/');
+define('DIR_SYSTEM', '{{ site_root }}/system/');
+define('DIR_IMAGE', '{{ site_root }}/image/');
+define('DIR_STORAGE', '{{ storage_dir }}/');
+define('DIR_LANGUAGE', DIR_APPLICATION . 'language/');
+define('DIR_TEMPLATE', DIR_APPLICATION . 'view/theme/');
+define('DIR_CONFIG', DIR_SYSTEM . 'config/');
+define('DIR_CACHE', DIR_STORAGE . 'cache/');
+define('DIR_DOWNLOAD', DIR_STORAGE . 'download/');
+define('DIR_LOGS', DIR_STORAGE . 'logs/');
+define('DIR_MODIFICATION', DIR_STORAGE . 'modification/');
+define('DIR_SESSION', DIR_STORAGE . 'session/');
+define('DIR_UPLOAD', DIR_STORAGE . 'upload/');
+
+define('DB_DRIVER', 'mysqli');
+define('DB_HOSTNAME', '{{ mysql_host }}');
+define('DB_USERNAME', '{{ db_user }}');
+define('DB_PASSWORD', '{{ db_password }}');
+define('DB_DATABASE', '{{ db_name }}');
+define('DB_PORT', '{{ mysql_port }}');
+define('DB_PREFIX', '{{ db_prefix }}');

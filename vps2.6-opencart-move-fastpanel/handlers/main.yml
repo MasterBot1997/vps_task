@@ -1,0 +1,29 @@
+---
+- name: Reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  when: web_server == 'nginx'
+
+- name: Reload apache2
+  ansible.builtin.systemd:
+    name: apache2
+    state: reloaded
+  when: web_server == 'apache2'
+
+- name: Restart php-fpm
+  ansible.builtin.systemd:
+    name: "php{{ php_version }}-fpm"
+    state: restarted
+
+- name: Restart mysql
+  ansible.builtin.systemd:
+    name: mysql
+    state: restarted
+  failed_when: false
+
+- name: Restart mariadb
+  ansible.builtin.systemd:
+    name: mariadb
+    state: restarted
+  failed_when: false

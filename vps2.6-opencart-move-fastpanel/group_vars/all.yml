@@ -1,0 +1,80 @@
+---
+# Store production secrets in Ansible Vault, not in plain group_vars.
+opencart_admin_user: "admin"
+opencart_admin_password: "Adm1n-OC-9xQ4-vR7m-Zp2K"
+opencart_admin_email: "admin@{{ site_domain }}"
+
+db_name: "lowrain"
+db_user: "lowbrain_usr"
+db_password: "DB-LowRain-7mK2-xP9q-V4sZ"
+db_prefix: "oc_"
+
+# Required at runtime:
+# ansible-playbook -i inventory.ini vps2.6-opencart-move-fastpanel.yml -e site_domain=shop.example.com
+site_domain: ""
+site_root: "/var/www/{{ site_domain }}"
+site_owner: "www-data"
+site_group: "www-data"
+
+# Latest verified release at generation time: 3.0.5.0.
+# Keep opencart_version as requested, but pin the official archive URL explicitly.
+opencart_version: "latest"
+opencart_download_url: "https://github.com/opencart/opencart/releases/download/3.0.5.0/opencart-3.0.5.0.zip"
+
+php_version: "8.2"
+mysql_host: "localhost"
+mysql_port: 3306
+mysql_login_unix_socket: "/var/run/mysqld/mysqld.sock"
+
+web_server: "nginx"
+fastpanel_required: true
+manage_vhost: false
+fastpanel_marker_paths:
+  - /usr/local/fastpanel2
+  - /usr/local/fastpanel
+  - /etc/fastpanel2
+  - /etc/fastpanel
+
+remove_install_dir: true
+show_credentials_after_install: false
+
+enable_path_diagnostics: true
+path_diagnostics_basic_auth: true
+path_diagnostics_user: "pathcheck"
+path_diagnostics_password: "PathCheck-9xQ4-vR7m"
+path_diagnostics_htpasswd: "{{ site_root }}/.path-check.htpasswd"
+
+migration_mode: true
+old_server: ""
+old_site_root: "/var/www/old-site"
+backup_dir: "/root/opencart_backup"
+db_dump_path: ""
+
+storage_dir: "{{ site_root }}/storage"
+opencart_tmp_dir: "/tmp/opencart-{{ site_domain }}"
+opencart_archive_path: "{{ opencart_tmp_dir }}/opencart.zip"
+
+php_ini_values:
+  upload_max_filesize: "64M"
+  post_max_size: "64M"
+  memory_limit: "256M"
+  max_execution_time: "120"
+  date.timezone: "UTC"
+
+writable_dirs:
+  - image
+  - image/cache
+  - system/storage
+  - system/storage/cache
+  - system/storage/download
+  - system/storage/logs
+  - system/storage/modification
+  - system/storage/session
+  - system/storage/upload
+  - storage
+  - storage/cache
+  - storage/download
+  - storage/logs
+  - storage/modification
+  - storage/session
+  - storage/upload

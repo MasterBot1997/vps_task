@@ -1,0 +1,31 @@
+server {
+    listen 80;
+    server_name {{ site_domain }};
+    root {{ site_root }};
+    index index.php index.html;
+
+    access_log /var/log/nginx/{{ site_domain }}.access.log;
+    error_log /var/log/nginx/{{ site_domain }}.error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php{{ php_version }}-fpm.sock;
+    }
+
+    location ~* /(config\.php|admin/config\.php|system/storage|storage) {
+        deny all;
+    }
+
+{% if enable_path_diagnostics and path_diagnostics_basic_auth %}
+    location ~ ^/(path-check-1|path-check-2)\.php$ {
+        auth_basic "OpenCart path diagnostics";
+        auth_basic_user_file {{ path_diagnostics_htpasswd }};
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php{{ php_version }}-fpm.sock;
+    }
+{% endif %}
+}

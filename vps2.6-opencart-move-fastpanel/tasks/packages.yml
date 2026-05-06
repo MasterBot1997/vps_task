@@ -1,0 +1,58 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install OpenCart runtime packages
+  ansible.builtin.apt:
+    name:
+      - "{{ web_server }}"
+      - "php{{ php_version }}"
+      - "php{{ php_version }}-cli"
+      - "php{{ php_version }}-fpm"
+      - "php{{ php_version }}-mysql"
+      - "php{{ php_version }}-curl"
+      - "php{{ php_version }}-gd"
+      - "php{{ php_version }}-zip"
+      - "php{{ php_version }}-mbstring"
+      - "php{{ php_version }}-xml"
+      - "php{{ php_version }}-intl"
+      - mysql-server
+      - unzip
+      - curl
+      - wget
+      - rsync
+      - python3-pymysql
+      - python3-passlib
+    state: present
+
+- name: Ensure services are started
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - "{{ web_server }}"
+    - "php{{ php_version }}-fpm"
+    - mysql
+  failed_when: false
+
+- name: Tune PHP FPM ini values
+  ansible.builtin.ini_file:
+    path: "/etc/php/{{ php_version }}/fpm/php.ini"
+    section: PHP
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+    mode: "0644"
+  loop: "{{ php_ini_values | dict2items }}"
+  notify: Restart php-fpm
+
+- name: Tune PHP CLI ini values
+  ansible.builtin.ini_file:
+    path: "/etc/php/{{ php_version }}/cli/php.ini"
+    section: PHP
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+    mode: "0644"
+  loop: "{{ php_ini_values | dict2items }}"

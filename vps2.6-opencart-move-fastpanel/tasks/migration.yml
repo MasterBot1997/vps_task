@@ -1,0 +1,46 @@
+---
+- name: Check local old site root
+  ansible.builtin.stat:
+    path: "{{ old_site_root }}"
+  register: local_old_site_root
+  when:
+    - old_server | length == 0
+    - old_site_root | length > 0
+    - old_site_root != site_root
+
+- name: Copy local old site root into new site root
+  ansible.builtin.command:
+    cmd: "rsync -a --delete {{ old_site_root }}/ {{ site_root }}/"
+  changed_when: true
+  when:
+    - old_server | length == 0
+    - old_site_root | length > 0
+    - old_site_root != site_root
+    - local_old_site_root.stat.exists | default(false)
+
+- name: Copy old site root from remote old server
+  ansible.builtin.command:
+    cmd: "rsync -a --delete {{ old_server }}:{{ old_site_root }}/ {{ site_root }}/"
+  changed_when: true
+  when:
+    - old_server | length > 0
+    - old_site_root | length > 0
+
+- name: Clear OpenCart cache and logs after migration
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ site_root }}/system/storage/cache"
+    - "{{ site_root }}/system/storage/logs"
+    - "{{ storage_dir }}/cache"
+    - "{{ storage_dir }}/logs"
+
+- name: Recreate writable directories after cleanup
+  ansible.builtin.file:
+    path: "{{ site_root }}/{{ item }}"
+    state: directory
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0775"
+  loop: "{{ writable_dirs }}"

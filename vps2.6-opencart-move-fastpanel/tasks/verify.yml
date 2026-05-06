@@ -1,0 +1,64 @@
+---
+- name: Flush handlers before final checks
+  ansible.builtin.meta: flush_handlers
+
+- name: Verify database query as OpenCart user
+  community.mysql.mysql_query:
+    login_host: "{{ mysql_host }}"
+    login_port: "{{ mysql_port }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_db: "{{ db_name }}"
+    query: "SELECT DATABASE() AS db_name"
+  no_log: true
+
+- name: Verify site homepage
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/"
+    method: GET
+    headers:
+      Host: "{{ site_domain }}"
+    status_code:
+      - 200
+      - 302
+    return_content: false
+  register: homepage_check
+  failed_when: false
+
+- name: Verify admin endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/admin/"
+    method: GET
+    headers:
+      Host: "{{ site_domain }}"
+    status_code:
+      - 200
+      - 302
+    return_content: false
+  register: admin_check
+  failed_when: false
+
+- name: Verify path diagnostics
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/{{ item }}.php"
+    method: GET
+    headers:
+      Host: "{{ site_domain }}"
+    user: "{{ path_diagnostics_user if path_diagnostics_basic_auth else omit }}"
+    password: "{{ path_diagnostics_password if path_diagnostics_basic_auth else omit }}"
+    force_basic_auth: "{{ path_diagnostics_basic_auth }}"
+    status_code: 200
+    return_content: true
+  loop:
+    - path-check-1
+    - path-check-2
+  register: diagnostics_check
+  when: enable_path_diagnostics | bool
+  no_log: true
+
+- name: Show final check summary
+  ansible.builtin.debug:
+    msg:
+      - "Homepage check status={{ homepage_check.status | default('not checked') }}"
+      - "Admin check status={{ admin_check.status | default('not checked') }}"
+      - "Diagnostics enabled={{ enable_path_diagnostics }}"

@@ -1,0 +1,51 @@
+---
+- name: Download official OpenCart archive
+  ansible.builtin.get_url:
+    url: "{{ opencart_download_url }}"
+    dest: "{{ opencart_archive_path }}"
+    mode: "0644"
+
+- name: Unpack OpenCart archive
+  ansible.builtin.unarchive:
+    src: "{{ opencart_archive_path }}"
+    dest: "{{ opencart_tmp_dir }}"
+    remote_src: true
+    creates: "{{ opencart_tmp_dir }}/upload"
+
+- name: Check whether OpenCart is already present
+  ansible.builtin.stat:
+    path: "{{ site_root }}/index.php"
+  register: opencart_index
+
+- name: Copy OpenCart upload directory into site root
+  ansible.builtin.copy:
+    src: "{{ opencart_tmp_dir }}/upload/"
+    dest: "{{ site_root }}/"
+    remote_src: true
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    directory_mode: "0755"
+    mode: preserve
+  when: not opencart_index.stat.exists
+
+- name: Create config.php from config-dist.php if absent
+  ansible.builtin.copy:
+    src: "{{ site_root }}/config-dist.php"
+    dest: "{{ site_root }}/config.php"
+    remote_src: true
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+    force: false
+  when: not opencart_index.stat.exists
+
+- name: Create admin/config.php from admin/config-dist.php if absent
+  ansible.builtin.copy:
+    src: "{{ site_root }}/admin/config-dist.php"
+    dest: "{{ site_root }}/admin/config.php"
+    remote_src: true
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+    force: false
+  when: not opencart_index.stat.exists
