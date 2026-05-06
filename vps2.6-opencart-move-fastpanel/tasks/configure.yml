@@ -52,6 +52,27 @@
     replace: "del(CACHE_PREFIX . $key)"
   when: enable_redis_cache | bool
 
+- name: Patch OpenCart Redis cache driver global CACHE_HOSTNAME constant
+  ansible.builtin.replace:
+    path: "{{ site_root }}/system/library/cache/redis.php"
+    regexp: "(?<!\\\\)CACHE_HOSTNAME"
+    replace: "\\\\CACHE_HOSTNAME"
+  when: enable_redis_cache | bool
+
+- name: Patch OpenCart Redis cache driver global CACHE_PORT constant
+  ansible.builtin.replace:
+    path: "{{ site_root }}/system/library/cache/redis.php"
+    regexp: "(?<!\\\\)CACHE_PORT"
+    replace: "\\\\CACHE_PORT"
+  when: enable_redis_cache | bool
+
+- name: Patch OpenCart Redis cache driver global CACHE_PREFIX constant
+  ansible.builtin.replace:
+    path: "{{ site_root }}/system/library/cache/redis.php"
+    regexp: "(?<!\\\\)CACHE_PREFIX"
+    replace: "\\\\CACHE_PREFIX"
+  when: enable_redis_cache | bool
+
 - name: Check OpenCart installation table
   community.mysql.mysql_query:
     login_host: "{{ mysql_host }}"
