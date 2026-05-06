@@ -47,7 +47,7 @@ vps2.6-opencart-move-fastpanel/
 ## Что Делает
 
 1. Проверяет, что исходный сервер Ubuntu 24.04+.
-2. Ставит пакеты nginx, PHP-FPM, PHP extensions, MySQL, Redis, unzip, curl, wget, rsync, composer, python3-pymysql.
+2. Ставит пакеты nginx, PHP-FPM, PHP extensions including bcmath, MySQL, Redis, unzip, curl, wget, rsync, composer, python3-pymysql.
 3. Настраивает PHP-параметры.
 4. Создаёт директорию сайта `/var/www/<домен>`.
 5. Создаёт БД `lowrain` и пользователя `lowbrain_usr`.
