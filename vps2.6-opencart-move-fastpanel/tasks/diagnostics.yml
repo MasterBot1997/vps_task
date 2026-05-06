@@ -22,6 +22,7 @@
   loop: "{{ path_diagnostic_products }}"
   vars:
     page_name: "{{ item.page_name }}"
+    product_id: "{{ item.product_id }}"
   when: enable_path_diagnostics | bool
 
 - name: Remove legacy obvious diagnostic URLs

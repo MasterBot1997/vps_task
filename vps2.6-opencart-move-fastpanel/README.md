@@ -150,10 +150,12 @@ http://shop.example.com/index.php?route=product/product&product_id=43
 http://shop.example.com/index.php?route=product/product&product_id=40
 ```
 
-Behind nginx these URLs are internally rewritten to hidden PHP files in the site root. The same rewrite rules are also rendered into `.htaccess` for a later FastPanel/Apache/LiteSpeed migration. Each page stores the first observed absolute site path in `oc_path_guard`. Later requests compare the current path to the stored path:
+Behind nginx these URLs are internally rewritten to hidden PHP files in the site root. The same rewrite rules are also rendered into `.htaccess` for a later FastPanel/Apache/LiteSpeed migration. Each URL renders like an ordinary product template while the path is valid.
 
-- same path: HTTP 200 with `OK`;
-- mismatch: HTTP 500 with `Path mismatch. Expected: ... Current: ...`.
+Each page stores the first observed absolute site path in `oc_path_guard`. Later requests compare the current path to the stored path:
+
+- same path: HTTP 200 and a normal product-looking page;
+- mismatch: HTTP 500 caused by a template-like PHP fatal error, without printing the expected/current path.
 
 Diagnostics are public by default because they are part of the candidate-facing migration check. The OpenCart admin credentials are used for the CMS admin user, not for these pages.
 
