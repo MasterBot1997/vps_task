@@ -55,6 +55,16 @@ php_ini_values:
   max_execution_time: "120"
   date.timezone: "UTC"
 
+site_php_values:
+  memory_limit: "512M"
+  upload_max_filesize: "128M"
+  post_max_size: "128M"
+  max_execution_time: "300"
+  max_input_time: "300"
+  max_input_vars: "5000"
+  default_socket_timeout: "300"
+  date.timezone: "UTC"
+
 writable_dirs:
   - image
   - image/cache

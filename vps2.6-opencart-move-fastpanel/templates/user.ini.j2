@@ -1,0 +1,8 @@
+; Per-site PHP settings for PHP-FPM/FastCGI.
+; These values are intentionally higher than common defaults for OpenCart imports.
+{% for key, value in site_php_values.items() %}
+{{ key }}={{ value }}
+{% endfor %}
+display_errors=Off
+log_errors=On
+

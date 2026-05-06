@@ -37,8 +37,10 @@ vps2.6-opencart-move-fastpanel/
 └── templates/
     ├── admin_config.php.j2
     ├── config.php.j2
+    ├── htaccess.j2
     ├── nginx-opencart.conf.j2
-    └── path-check.php.j2
+    ├── path-check.php.j2
+    └── user.ini.j2
 ```
 
 ## Что Делает
@@ -51,9 +53,10 @@ vps2.6-opencart-move-fastpanel/
 6. Скачивает официальный архив OpenCart.
 7. Копирует содержимое `upload/` в site root.
 8. Генерирует `config.php` и `admin/config.php`.
-9. Создаёт nginx vhost и отключает default site.
-10. Создаёт диагностические `path-check-1.php` и `path-check-2.php`.
-11. Выполняет финальные проверки главной, `/admin/`, БД и diagnostics.
+9. Создаёт `.htaccess` и `.user.ini` с повышенными PHP limits.
+10. Создаёт nginx vhost и отключает default site.
+11. Создаёт диагностические `path-check-1.php` и `path-check-2.php`.
+12. Выполняет финальные проверки главной, `/admin/`, БД и diagnostics.
 
 ## Before Running
 
@@ -85,6 +88,20 @@ remove_install_dir: true
 ```
 
 Production passwords should be moved into Ansible Vault.
+
+Per-site PHP limits are rendered into both `.htaccess` and `.user.ini`:
+
+```yaml
+site_php_values:
+  memory_limit: "512M"
+  upload_max_filesize: "128M"
+  post_max_size: "128M"
+  max_execution_time: "300"
+  max_input_time: "300"
+  max_input_vars: "5000"
+```
+
+On the source nginx server `.user.ini` is relevant for PHP-FPM. The `.htaccess` file is kept for Apache/LiteSpeed/FastPanel-style migrations.
 
 ## Run
 

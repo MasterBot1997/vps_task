@@ -15,6 +15,22 @@
     group: "{{ site_group }}"
     mode: "0644"
 
+- name: Render Apache/LiteSpeed .htaccess PHP limits
+  ansible.builtin.template:
+    src: htaccess.j2
+    dest: "{{ site_root }}/.htaccess"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+
+- name: Render PHP-FPM .user.ini limits
+  ansible.builtin.template:
+    src: user.ini.j2
+    dest: "{{ site_root }}/.user.ini"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+
 - name: Check OpenCart installation table
   community.mysql.mysql_query:
     login_host: "{{ mysql_host }}"
