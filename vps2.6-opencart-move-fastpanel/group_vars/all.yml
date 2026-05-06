@@ -21,7 +21,7 @@ site_group: "www-data"
 opencart_version: "latest"
 opencart_download_url: "https://github.com/opencart/opencart/releases/download/3.0.5.0/opencart-3.0.5.0.zip"
 
-php_version: "8.2"
+php_version: "8.3"
 mysql_host: "localhost"
 mysql_port: 3306
 mysql_login_unix_socket: "/var/run/mysqld/mysqld.sock"
