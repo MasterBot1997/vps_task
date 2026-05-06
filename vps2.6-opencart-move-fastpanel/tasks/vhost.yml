@@ -7,7 +7,6 @@
     group: root
     mode: "0644"
   notify: Reload nginx
-  when: web_server == 'nginx'
 
 - name: Enable managed nginx vhost
   ansible.builtin.file:
@@ -15,14 +14,19 @@
     dest: "/etc/nginx/sites-enabled/{{ site_domain }}"
     state: link
   notify: Reload nginx
-  when: web_server == 'nginx'
+
+- name: Disable default nginx vhost
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
 
 - name: Validate nginx configuration
   ansible.builtin.command: nginx -t
   changed_when: false
-  when: web_server == 'nginx'
 
-- name: Warn about Apache vhost management
-  ansible.builtin.debug:
-    msg: "Apache vhost management is intentionally left for FastPanel unless you add an apache template."
-  when: web_server == 'apache2'
+- name: Ensure nginx is enabled and started
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true

@@ -3,6 +3,7 @@
   ansible.builtin.assert:
     that:
       - ansible_distribution == "Ubuntu"
+      - ansible_distribution_major_version | int >= 24
     fail_msg: "This playbook is intended for Ubuntu Server only."
 
 - name: Assert deployment domain was passed at runtime
@@ -21,24 +22,12 @@
       - site_root != "/var/www/"
     fail_msg: "site_root resolved to an unsafe value. Check site_domain/site_root variables."
 
-- name: Check FastPanel marker paths
-  ansible.builtin.stat:
-    path: "{{ item }}"
-  loop: "{{ fastpanel_marker_paths }}"
-  register: fastpanel_markers
-
-- name: Check FastPanel binary
-  ansible.builtin.command: which fastpanel2
-  register: fastpanel_binary
-  changed_when: false
-  failed_when: false
-
-- name: Assert FastPanel is already installed
+- name: Assert this playbook manages a plain nginx source server
   ansible.builtin.assert:
     that:
-      - (fastpanel_markers.results | selectattr('stat.exists') | list | length > 0) or fastpanel_binary.rc == 0
-    fail_msg: "FastPanel was not detected. Install FastPanel first or set fastpanel_required=false."
-  when: fastpanel_required | bool
+      - web_server == "nginx"
+      - manage_vhost | bool
+    fail_msg: "This source-site playbook expects web_server=nginx and manage_vhost=true."
 
 - name: Check web server package state
   ansible.builtin.package_facts:
@@ -48,6 +37,5 @@
   ansible.builtin.debug:
     msg:
       - "nginx installed={{ 'nginx' in ansible_facts.packages }}"
-      - "apache2 installed={{ 'apache2' in ansible_facts.packages }}"
       - "mysql installed={{ 'mysql-server' in ansible_facts.packages }}"
       - "mariadb installed={{ 'mariadb-server' in ansible_facts.packages }}"

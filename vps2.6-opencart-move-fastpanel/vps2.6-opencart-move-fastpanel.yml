@@ -1,5 +1,5 @@
 ---
-- name: Deploy or migrate OpenCart on FastPanel server
+- name: Build source OpenCart site on plain Ubuntu server
   hosts: opencart
   become: true
   gather_facts: true
@@ -28,7 +28,7 @@
     - name: Download and unpack OpenCart
       ansible.builtin.import_tasks: tasks/opencart.yml
 
-    - name: Run migration tasks
+    - name: Run optional migration tasks
       ansible.builtin.import_tasks: tasks/migration.yml
       when: migration_mode | bool
 
@@ -38,7 +38,7 @@
     - name: Configure optional diagnostics
       ansible.builtin.import_tasks: tasks/diagnostics.yml
 
-    - name: Configure optional vhost
+    - name: Configure nginx vhost
       ansible.builtin.import_tasks: tasks/vhost.yml
       when: manage_vhost | bool
 

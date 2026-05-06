@@ -82,6 +82,18 @@
       - "DB password: {{ db_password }}"
   when: show_credentials_after_install | bool
 
+- name: Re-check OpenCart installation table after install attempt
+  community.mysql.mysql_query:
+    login_host: "{{ mysql_host }}"
+    login_port: "{{ mysql_port }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_db: "{{ db_name }}"
+    query: "SHOW TABLES LIKE '{{ db_prefix }}setting'"
+  register: opencart_setting_table_after_install
+  failed_when: false
+  no_log: true
+
 - name: Remove install directory after installation when requested
   ansible.builtin.file:
     path: "{{ site_root }}/install"
@@ -89,6 +101,7 @@
   when:
     - remove_install_dir | bool
     - not migration_mode | bool
+    - opencart_setting_table_after_install.rowcount[0] | default(0) | int > 0
 
 - name: Ensure final ownership
   ansible.builtin.file:
