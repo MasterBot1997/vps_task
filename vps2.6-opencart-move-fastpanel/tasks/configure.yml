@@ -31,6 +31,27 @@
     group: "{{ site_group }}"
     mode: "0644"
 
+- name: Enable Redis cache engine in OpenCart default config
+  ansible.builtin.replace:
+    path: "{{ site_root }}/system/config/default.php"
+    regexp: "\\$_\\['cache_engine'\\]\\s*=\\s*'[^']+';"
+    replace: "$_['cache_engine'] = '{{ redis_cache_engine }}';"
+  when: enable_redis_cache | bool
+
+- name: Patch OpenCart Redis cache driver for modern phpredis expire method
+  ansible.builtin.replace:
+    path: "{{ site_root }}/system/library/cache/redis.php"
+    regexp: "setTimeout\\(CACHE_PREFIX \\. \\$key, \\$this->expire\\)"
+    replace: "expire(CACHE_PREFIX . $key, $this->expire)"
+  when: enable_redis_cache | bool
+
+- name: Patch OpenCart Redis cache driver for modern phpredis delete method
+  ansible.builtin.replace:
+    path: "{{ site_root }}/system/library/cache/redis.php"
+    regexp: "delete\\(CACHE_PREFIX \\. \\$key\\)"
+    replace: "del(CACHE_PREFIX . $key)"
+  when: enable_redis_cache | bool
+
 - name: Check OpenCart installation table
   community.mysql.mysql_query:
     login_host: "{{ mysql_host }}"

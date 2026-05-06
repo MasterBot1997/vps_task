@@ -12,6 +12,13 @@
     query: "SELECT DATABASE() AS db_name"
   no_log: true
 
+- name: Verify Redis responds
+  ansible.builtin.command: redis-cli -h "{{ redis_host }}" -p "{{ redis_port }}" ping
+  register: redis_ping
+  changed_when: false
+  failed_when: redis_ping.stdout != "PONG"
+  when: enable_redis_cache | bool
+
 - name: Verify site homepage
   ansible.builtin.uri:
     url: "http://127.0.0.1/"

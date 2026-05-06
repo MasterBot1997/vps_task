@@ -18,7 +18,9 @@
       - "php{{ php_version }}-mbstring"
       - "php{{ php_version }}-xml"
       - "php{{ php_version }}-intl"
+      - "php{{ php_version }}-redis"
       - mysql-server
+      - redis-server
       - unzip
       - curl
       - wget
@@ -27,6 +29,7 @@
       - python3-pymysql
       - python3-passlib
     state: present
+  notify: Restart php-fpm
 
 - name: Ensure services are started
   ansible.builtin.systemd:
@@ -37,6 +40,7 @@
     - "{{ web_server }}"
     - "php{{ php_version }}-fpm"
     - mysql
+    - redis-server
   failed_when: false
 
 - name: Tune PHP FPM ini values
