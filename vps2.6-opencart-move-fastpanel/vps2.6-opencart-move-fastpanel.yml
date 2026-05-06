@@ -1,6 +1,6 @@
 ---
 - name: Build source OpenCart site on plain Ubuntu server
-  hosts: opencart
+  hosts: web
   become: true
   gather_facts: true
 

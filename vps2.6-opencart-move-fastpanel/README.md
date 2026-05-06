@@ -73,6 +73,13 @@ inventory.ini
 group_vars/all.yml
 ```
 
+Inventory uses the repository-wide standard. Usually only the IP changes:
+
+```ini
+[web]
+217.114.4.19 ansible_user=root ansible_private_key_file=~/.ssh/ansible_task ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+```
+
 Important variables:
 
 ```yaml
