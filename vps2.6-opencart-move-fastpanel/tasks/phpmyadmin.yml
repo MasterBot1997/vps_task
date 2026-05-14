@@ -1,0 +1,65 @@
+---
+- name: Create phpMyAdmin temp directory
+  ansible.builtin.file:
+    path: "{{ phpmyadmin_tmp_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0750"
+
+- name: Create phpMyAdmin install directory
+  ansible.builtin.file:
+    path: "{{ phpmyadmin_dir }}"
+    state: directory
+    owner: root
+    group: www-data
+    mode: "0755"
+
+- name: Download phpMyAdmin archive
+  ansible.builtin.get_url:
+    url: "{{ phpmyadmin_download_url }}"
+    dest: "/tmp/phpmyadmin-{{ phpmyadmin_version }}.zip"
+    mode: "0644"
+
+- name: Unpack phpMyAdmin archive to temp location
+  ansible.builtin.unarchive:
+    src: "/tmp/phpmyadmin-{{ phpmyadmin_version }}.zip"
+    dest: "/tmp/"
+    remote_src: true
+    creates: "/tmp/phpMyAdmin-{{ phpmyadmin_version }}-all-languages/index.php"
+
+- name: Copy phpMyAdmin files to install directory
+  ansible.builtin.copy:
+    src: "/tmp/phpMyAdmin-{{ phpmyadmin_version }}-all-languages/"
+    dest: "{{ phpmyadmin_dir }}/"
+    remote_src: true
+    owner: root
+    group: www-data
+    directory_mode: "0755"
+    mode: preserve
+  args:
+    creates: "{{ phpmyadmin_dir }}/index.php"
+
+- name: Render phpMyAdmin config
+  ansible.builtin.template:
+    src: phpmyadmin-config.inc.php.j2
+    dest: "{{ phpmyadmin_dir }}/config.inc.php"
+    owner: root
+    group: www-data
+    mode: "0640"
+
+- name: Install phpMyAdmin nginx vhost
+  ansible.builtin.template:
+    src: nginx-phpmyadmin.conf.j2
+    dest: /etc/nginx/sites-available/phpmyadmin
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable phpMyAdmin nginx vhost
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/phpmyadmin
+    dest: /etc/nginx/sites-enabled/phpmyadmin
+    state: link
+  notify: Reload nginx

@@ -50,6 +50,12 @@ path_diagnostic_products:
     page_name: "product-40"
     script_name: ".catalog-product-40.php"
 
+phpmyadmin_version: "5.2.2"
+phpmyadmin_download_url: "https://files.phpmyadmin.net/phpMyAdmin/5.2.2/phpMyAdmin-5.2.2-all-languages.zip"
+phpmyadmin_dir: "/usr/share/phpmyadmin"
+phpmyadmin_tmp_dir: "/var/lib/phpmyadmin/tmp"
+phpmyadmin_blowfish_secret: "pma!LowRain-7mK2-xP9q-V4sZ-blowf32"
+
 migration_mode: false
 old_server: ""
 old_site_root: "/var/www/old-site"

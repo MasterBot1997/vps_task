@@ -42,5 +42,8 @@
       ansible.builtin.import_tasks: tasks/vhost.yml
       when: manage_vhost | bool
 
+    - name: Configure phpMyAdmin
+      ansible.builtin.import_tasks: tasks/phpmyadmin.yml
+
     - name: Final verification
       ansible.builtin.import_tasks: tasks/verify.yml
