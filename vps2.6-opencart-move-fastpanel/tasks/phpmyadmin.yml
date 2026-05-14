@@ -28,6 +28,11 @@
     remote_src: true
     creates: "/tmp/phpMyAdmin-{{ phpmyadmin_version }}-all-languages/index.php"
 
+- name: Check if phpMyAdmin is already installed
+  ansible.builtin.stat:
+    path: "{{ phpmyadmin_dir }}/index.php"
+  register: pma_index
+
 - name: Copy phpMyAdmin files to install directory
   ansible.builtin.copy:
     src: "/tmp/phpMyAdmin-{{ phpmyadmin_version }}-all-languages/"
@@ -37,8 +42,7 @@
     group: www-data
     directory_mode: "0755"
     mode: preserve
-  args:
-    creates: "{{ phpmyadmin_dir }}/index.php"
+  when: not pma_index.stat.exists
 
 - name: Render phpMyAdmin config
   ansible.builtin.template:
