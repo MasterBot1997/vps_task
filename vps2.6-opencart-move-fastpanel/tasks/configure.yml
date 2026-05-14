@@ -1,20 +1,4 @@
 ---
-- name: Render OpenCart frontend config
-  ansible.builtin.template:
-    src: config.php.j2
-    dest: "{{ site_root }}/config.php"
-    owner: "{{ site_owner }}"
-    group: "{{ site_group }}"
-    mode: "0644"
-
-- name: Render OpenCart admin config
-  ansible.builtin.template:
-    src: admin_config.php.j2
-    dest: "{{ site_root }}/admin/config.php"
-    owner: "{{ site_owner }}"
-    group: "{{ site_group }}"
-    mode: "0644"
-
 - name: Render Apache/LiteSpeed .htaccess PHP limits
   ansible.builtin.template:
     src: htaccess.j2
@@ -113,6 +97,22 @@
   when:
     - opencart_cli_installer.stat.exists
     - opencart_setting_table.rowcount[0] | default(0) | int == 0
+
+- name: Render OpenCart frontend config
+  ansible.builtin.template:
+    src: config.php.j2
+    dest: "{{ site_root }}/config.php"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
+
+- name: Render OpenCart admin config
+  ansible.builtin.template:
+    src: admin_config.php.j2
+    dest: "{{ site_root }}/admin/config.php"
+    owner: "{{ site_owner }}"
+    group: "{{ site_group }}"
+    mode: "0644"
 
 - name: Show manual installer instructions when auto-install is unavailable
   ansible.builtin.debug:
