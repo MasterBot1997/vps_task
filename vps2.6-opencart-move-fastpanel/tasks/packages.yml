@@ -21,7 +21,6 @@
       - "{{ web_server }}"
       - "php{{ php_version }}"
       - "php{{ php_version }}-cli"
-      - "php{{ php_version }}-fpm"
       - "php{{ php_version }}-mysql"
       - "php{{ php_version }}-curl"
       - "php{{ php_version }}-gd"
@@ -41,16 +40,39 @@
       - python3-pymysql
       - python3-passlib
     state: present
+
+- name: Install PHP-FPM for nginx deployments
+  ansible.builtin.apt:
+    name: "php{{ php_version }}-fpm"
+    state: present
+  when: web_server == "nginx"
   notify: Restart php-fpm
 
-- name: Ensure services are started
+- name: Install mod_php for Apache deployments
+  ansible.builtin.apt:
+    name: "libapache2-mod-php{{ php_version }}"
+    state: present
+  when: web_server == "apache2"
+
+- name: Ensure web server service is started
+  ansible.builtin.systemd:
+    name: "{{ web_server }}"
+    state: started
+    enabled: true
+
+- name: Ensure PHP-FPM service is started
+  ansible.builtin.systemd:
+    name: "php{{ php_version }}-fpm"
+    state: started
+    enabled: true
+  when: web_server == "nginx"
+
+- name: Ensure database and cache services are started
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: started
     enabled: true
   loop:
-    - "{{ web_server }}"
-    - "php{{ php_version }}-fpm"
     - mysql
     - redis-server
   failed_when: false
@@ -64,6 +86,17 @@
     mode: "0644"
   loop: "{{ php_ini_values | dict2items }}"
   notify: Restart php-fpm
+  when: web_server == "nginx"
+
+- name: Tune PHP Apache ini values
+  ansible.builtin.ini_file:
+    path: "/etc/php/{{ php_version }}/apache2/php.ini"
+    section: PHP
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+    mode: "0644"
+  loop: "{{ php_ini_values | dict2items }}"
+  when: web_server == "apache2"
 
 - name: Tune PHP CLI ini values
   ansible.builtin.ini_file:

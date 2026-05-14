@@ -52,18 +52,17 @@
     group: www-data
     mode: "0640"
 
-- name: Install phpMyAdmin nginx vhost
+- name: Install phpMyAdmin Apache vhost
   ansible.builtin.template:
-    src: nginx-phpmyadmin.conf.j2
-    dest: /etc/nginx/sites-available/phpmyadmin
+    src: apache-phpmyadmin.conf.j2
+    dest: /etc/apache2/sites-available/phpmyadmin.conf
     owner: root
     group: root
     mode: "0644"
-  notify: Reload nginx
+  notify: Reload apache2
 
-- name: Enable phpMyAdmin nginx vhost
-  ansible.builtin.file:
-    src: /etc/nginx/sites-available/phpmyadmin
-    dest: /etc/nginx/sites-enabled/phpmyadmin
-    state: link
-  notify: Reload nginx
+- name: Enable phpMyAdmin Apache vhost
+  ansible.builtin.command:
+    cmd: a2ensite phpmyadmin.conf
+    creates: /etc/apache2/sites-enabled/phpmyadmin.conf
+  notify: Reload apache2

@@ -1,0 +1,18 @@
+<VirtualHost *:80>
+    ServerName {{ ansible_default_ipv4.address }}
+    DocumentRoot {{ phpmyadmin_dir }}
+
+    ErrorLog  ${APACHE_LOG_DIR}/phpmyadmin.error.log
+    CustomLog ${APACHE_LOG_DIR}/phpmyadmin.access.log combined
+
+    <Directory {{ phpmyadmin_dir }}>
+        Options SymLinksIfOwnerMatch
+        AllowOverride None
+        DirectoryIndex index.php
+        Require all granted
+    </Directory>
+
+    <DirectoryMatch "{{ phpmyadmin_dir }}/(setup|libraries|templates)">
+        Require all denied
+    </DirectoryMatch>
+</VirtualHost>

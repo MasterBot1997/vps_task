@@ -22,12 +22,12 @@
       - site_root != "/var/www/"
     fail_msg: "site_root resolved to an unsafe value. Check site_domain/site_root variables."
 
-- name: Assert this playbook manages a plain nginx source server
+- name: Assert this playbook manages a supported source web server
   ansible.builtin.assert:
     that:
-      - web_server == "nginx"
+      - web_server in ['nginx', 'apache2']
       - manage_vhost | bool
-    fail_msg: "This source-site playbook expects web_server=nginx and manage_vhost=true."
+    fail_msg: "web_server must be nginx or apache2, and manage_vhost must be true."
 
 - name: Check web server package state
   ansible.builtin.package_facts:
@@ -36,6 +36,8 @@
 - name: Show detected web stack
   ansible.builtin.debug:
     msg:
+      - "web_server={{ web_server }}"
+      - "apache2 installed={{ 'apache2' in ansible_facts.packages }}"
       - "nginx installed={{ 'nginx' in ansible_facts.packages }}"
       - "mysql installed={{ 'mysql-server' in ansible_facts.packages }}"
       - "mariadb installed={{ 'mariadb-server' in ansible_facts.packages }}"

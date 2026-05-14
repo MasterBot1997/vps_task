@@ -1,0 +1,21 @@
+<VirtualHost *:80>
+    ServerName {{ site_domain }}
+    DocumentRoot {{ site_root }}
+
+    ErrorLog  ${APACHE_LOG_DIR}/{{ site_domain }}.error.log
+    CustomLog ${APACHE_LOG_DIR}/{{ site_domain }}.access.log combined
+
+    <Directory {{ site_root }}>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <FilesMatch "^(config\.php|admin/config\.php)$">
+        Require all denied
+    </FilesMatch>
+
+    <DirectoryMatch "{{ site_root }}/(system/storage|storage)">
+        Require all denied
+    </DirectoryMatch>
+</VirtualHost>

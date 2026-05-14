@@ -1,32 +1,37 @@
 ---
-- name: Install managed nginx vhost
+- name: Enable Apache mod_rewrite
+  community.general.apache2_module:
+    name: rewrite
+    state: present
+  notify: Reload apache2
+
+- name: Install managed Apache vhost
   ansible.builtin.template:
-    src: nginx-opencart.conf.j2
-    dest: "/etc/nginx/sites-available/{{ site_domain }}"
+    src: apache-opencart.conf.j2
+    dest: "/etc/apache2/sites-available/{{ site_domain }}.conf"
     owner: root
     group: root
     mode: "0644"
-  notify: Reload nginx
+  notify: Reload apache2
 
-- name: Enable managed nginx vhost
-  ansible.builtin.file:
-    src: "/etc/nginx/sites-available/{{ site_domain }}"
-    dest: "/etc/nginx/sites-enabled/{{ site_domain }}"
-    state: link
-  notify: Reload nginx
+- name: Enable managed Apache vhost
+  ansible.builtin.command:
+    cmd: "a2ensite {{ site_domain }}.conf"
+    creates: "/etc/apache2/sites-enabled/{{ site_domain }}.conf"
+  notify: Reload apache2
 
-- name: Disable default nginx vhost
-  ansible.builtin.file:
-    path: /etc/nginx/sites-enabled/default
-    state: absent
-  notify: Reload nginx
+- name: Disable default Apache vhost
+  ansible.builtin.command:
+    cmd: a2dissite 000-default.conf
+    removes: /etc/apache2/sites-enabled/000-default.conf
+  notify: Reload apache2
 
-- name: Validate nginx configuration
-  ansible.builtin.command: nginx -t
+- name: Validate Apache configuration
+  ansible.builtin.command: apache2ctl configtest
   changed_when: false
 
-- name: Ensure nginx is enabled and started
+- name: Ensure Apache is enabled and started
   ansible.builtin.systemd:
-    name: nginx
+    name: apache2
     state: started
     enabled: true

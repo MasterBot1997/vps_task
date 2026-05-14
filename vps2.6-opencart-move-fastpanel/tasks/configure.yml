@@ -152,6 +152,11 @@
   failed_when: false
   no_log: true
 
+- name: Remove OpenCart sample .htaccess.txt from site root
+  ansible.builtin.file:
+    path: "{{ site_root }}/.htaccess.txt"
+    state: absent
+
 - name: Remove install directory after installation when requested
   ansible.builtin.file:
     path: "{{ site_root }}/install"
