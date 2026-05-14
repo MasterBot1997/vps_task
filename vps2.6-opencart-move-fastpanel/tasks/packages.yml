@@ -4,6 +4,17 @@
     update_cache: true
     cache_valid_time: 3600
 
+- name: Install software-properties-common for PPA support
+  ansible.builtin.apt:
+    name: software-properties-common
+    state: present
+
+- name: Add ondrej/php PPA for PHP 8.4
+  ansible.builtin.apt_repository:
+    repo: ppa:ondrej/php
+    state: present
+    update_cache: true
+
 - name: Install OpenCart runtime packages
   ansible.builtin.apt:
     name:
