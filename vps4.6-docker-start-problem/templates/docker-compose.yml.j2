@@ -1,0 +1,20 @@
+services:
+  app:
+    image: {{ app_image }}
+    container_name: app
+    ports:
+      - "{{ app_port }}:{{ app_port }}"
+    environment:
+      DB_HOST: localhost        # BUG: должно быть 'db' (имя сервиса), а не 'localhost'
+      DB_USER: {{ db_user }}
+      DB_PASSWORD: {{ db_password }}
+      DB_NAME: {{ db_name }}
+    restart: always             # маскирует проблему: контейнер падает и тут же перезапускается
+
+  db:
+    image: {{ db_image }}
+    container_name: db
+    environment:
+      POSTGRES_USER: {{ db_user }}
+      POSTGRES_PASSWORD: {{ db_password }}
+      POSTGRES_DB: {{ db_name }}

@@ -1,0 +1,26 @@
+---
+- name: Deploy broken Docker task environment
+  hosts: web
+  become: true
+  gather_facts: true
+
+  handlers:
+    - name: Import handlers
+      ansible.builtin.import_tasks: handlers/main.yml
+
+  pre_tasks:
+    - name: Check SSH connectivity
+      ansible.builtin.ping:
+
+  tasks:
+    - name: Run preflight checks
+      ansible.builtin.import_tasks: tasks/preflight.yml
+
+    - name: Install Docker
+      ansible.builtin.import_tasks: tasks/docker.yml
+
+    - name: Build application image
+      ansible.builtin.import_tasks: tasks/app.yml
+
+    - name: Deploy broken compose stack
+      ansible.builtin.import_tasks: tasks/deploy.yml

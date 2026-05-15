@@ -1,0 +1,46 @@
+'use strict';
+
+const { Pool } = require('pg');
+const http = require('http');
+
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: 5432,
+  connectionTimeoutMillis: 3000,
+});
+
+async function main() {
+  console.log(`Connecting to PostgreSQL at ${process.env.DB_HOST}:5432 ...`);
+
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('SELECT 1');
+    console.log('Database ready.');
+  } catch (err) {
+    console.error(`Failed to connect to database: ${err.message}`);
+    process.exit(1);
+  } finally {
+    if (client) client.release();
+  }
+
+  const server = http.createServer(async (req, res) => {
+    try {
+      const { rows } = await pool.query('SELECT NOW() AS time');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<h1>Notes App</h1><p>DB time: ${rows[0].time}</p>`);
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('DB error: ' + err.message);
+    }
+  });
+
+  server.listen(8080, '0.0.0.0', () => {
+    console.log('App listening on :8080');
+  });
+}
+
+main();

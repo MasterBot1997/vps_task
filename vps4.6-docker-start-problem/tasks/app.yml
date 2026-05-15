@@ -1,0 +1,31 @@
+---
+- name: Create app directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy app source files
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ app_dir }}/{{ item }}"
+    mode: '0644'
+  loop:
+    - app.js
+    - package.json
+    - Dockerfile
+  register: source_files
+
+- name: Check if notes-app image exists
+  ansible.builtin.command:
+    cmd: docker image inspect notes-app:latest
+  register: image_check
+  changed_when: false
+  failed_when: false
+
+- name: Build notes-app Docker image
+  ansible.builtin.command:
+    cmd: docker build -t notes-app:latest .
+    chdir: "{{ app_dir }}"
+  when: source_files is changed or image_check.rc != 0
+  changed_when: true

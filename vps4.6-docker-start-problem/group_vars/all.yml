@@ -1,0 +1,9 @@
+---
+app_dir: /opt/notes-app
+app_image: notes-app:latest
+app_port: 8080
+
+db_user: notes
+db_password: secret
+db_name: notesdb
+db_image: postgres:15
