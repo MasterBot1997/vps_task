@@ -1,0 +1,10 @@
+#!/bin/bash
+
+sleep {{ script_sleep }}
+
+IP=$(ip a show {{ network_interface }} | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+IP_SED=$IP"{{ ip_suffix }}"
+
+sed -i "s#$IP#$IP_SED#g" {{ network_interfaces_file }}
+
+systemctl restart networking.service

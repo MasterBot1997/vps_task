@@ -1,0 +1,17 @@
+---
+- name: Deploy network-breaking script and configure reboot cron
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Place haha.sh in {{ script_path | dirname }}
+      ansible.builtin.template:
+        src: haha.sh.j2
+        dest: "{{ script_path }}"
+        mode: '0755'
+
+    - name: Add cron job to run haha.sh at reboot
+      ansible.builtin.cron:
+        name: "run haha.sh on reboot"
+        special_time: reboot
+        job: "/bin/bash {{ script_path }}"
