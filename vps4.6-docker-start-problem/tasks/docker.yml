@@ -1,4 +1,16 @@
 ---
+- name: Remove conflicting Docker CE packages if present
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: absent
+    purge: true
+  failed_when: false
+
 - name: Install Docker and Compose from Ubuntu repos
   ansible.builtin.apt:
     name:
