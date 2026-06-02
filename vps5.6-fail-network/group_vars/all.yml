@@ -1,6 +1,6 @@
 ---
 script_path: /opt/haha.sh
-script_sleep: 60
+script_sleep: 30
 
 network_interface: eth0
 network_interfaces_file: /etc/network/interfaces.d/50-cloud-init.cfg
